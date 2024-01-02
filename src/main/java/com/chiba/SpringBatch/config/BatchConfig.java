@@ -7,6 +7,7 @@ import com.chiba.SpringBatch.repo.StudentRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -16,9 +17,11 @@ import org.springframework.batch.item.file.LineMapper;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -33,10 +36,13 @@ public class BatchConfig {
 
     private final StudentRepo studentRepo;
 
+
+
     @Bean
-    public FlatFileItemReader<StudentDTO> itemReader(){
+    @StepScope
+    public FlatFileItemReader<StudentDTO> itemReader(@Value("#{jobParameters['filePath']}") String filePath){
         FlatFileItemReader<StudentDTO> itemReader = new FlatFileItemReader<>();
-        itemReader.setResource(new FileSystemResource("src/main/resources/students.csv"));
+        itemReader.setResource(new FileSystemResource(filePath));
         itemReader.setName("Student ItemReader");
         itemReader.setLinesToSkip(1);
         itemReader.setLineMapper(lineMapper());
@@ -60,7 +66,7 @@ public class BatchConfig {
     public Step importStep(){
         return new StepBuilder("csvImport",jobRepository)
                 .<StudentDTO, Student>chunk(1000,platformTransactionManager)
-                .reader(itemReader())
+                .reader(itemReader(null))
                 .writer(write())
                 .processor(studentProcessor())
                 .taskExecutor(taskExecutor())
