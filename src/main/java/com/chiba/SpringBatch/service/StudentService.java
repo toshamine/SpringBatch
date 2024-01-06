@@ -39,10 +39,10 @@ public class StudentService {
 
     private String saveFile(MultipartFile file) throws IOException {
         String fileName = file.getOriginalFilename();
-        String filePath = "src/main/resources/batchFiles/" + fileName; // Set the full path where you want to save the file
+        String filePath = "src/main/resources/batchFiles/" + fileName;
         Path destinationPath = Path.of(filePath);
 
-        // Save the file to the specified location
+
         Files.copy(file.getInputStream(), destinationPath, StandardCopyOption.REPLACE_EXISTING);
 
         return filePath;
